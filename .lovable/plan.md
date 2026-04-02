@@ -1,73 +1,51 @@
 
 
-## Plan: Align GitHub Actions workflow with JPFF Ice Cream Shop
+## Plan: Set up GitHub Pages structure for deployment via GitHub Actions
 
-The preview works fine locally. The issue is likely that the GitHub Pages deployment fails. The current workflow is missing a key step (`configure-pages`) that the working Ice Cream Shop project has.
+The workflow and Vite config are already correct. The missing piece is a **404.html** file for SPA routing on GitHub Pages, and ensuring the build output works correctly.
 
-### Changes to `.github/workflows/deploy.yml`
+### Changes
 
-Update to match the working pattern from the Ice Cream Shop project:
+**1. Add `public/404.html`** — SPA redirect fallback
+GitHub Pages serves this for any route that doesn't match a static file. It redirects all paths back to `index.html` so client-side routing works.
 
-1. Add `workflow_dispatch` trigger (allows manual re-deploys)
-2. Add `actions/configure-pages@v4` step between build and upload (required for Pages to work correctly)
-3. Use `npm install` instead of `npm ci` (more resilient when lockfile has issues)
-4. Add `GITHUB_PAGES: true` env var to the build step
-5. Change `cancel-in-progress: false` to avoid cancelling ongoing deploys
-
-The final workflow will be:
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: ["main"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
-        env:
-          GITHUB_PAGES: true
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      // Redirect all 404s to index.html for SPA routing
+      var pathSegmentsToKeep = 0;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+</html>
 ```
 
-### No other file changes needed
-The `vite.config.ts` already has `base: "/"` which is correct.
+**2. Add SPA redirect handler to `index.html`** — inside `<head>`, add a script that picks up the redirect from 404.html and restores the correct URL via `replaceState`:
+
+```html
+<script>
+  (function(l) {
+    if (l.search[1] === '/') {
+      var decoded = l.search.slice(1).split('&').map(function(s) {
+        return s.replace(/~and~/g, '&')
+      }).join('?');
+      window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+    }
+  }(window.location))
+</script>
+```
+
+**3. Add `.nojekyll` file to `public/`** — empty file that tells GitHub Pages not to process the site through Jekyll (which ignores files starting with `_`, like `_assets`).
+
+These three additions complete the GitHub Pages SPA structure. The existing workflow and Vite config need no changes.
 
