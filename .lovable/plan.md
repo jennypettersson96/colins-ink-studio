@@ -1,51 +1,36 @@
 
+Plan: stabilize the white preview and finish the GitHub Pages setup
 
-## Plan: Set up GitHub Pages structure for deployment via GitHub Actions
+What I found
+- The app itself is rendering in the sandbox URL: navbar, hero, and styles load correctly in a direct browser check.
+- I did not find a fatal runtime crash in the app code. The console only shows development warnings about refs plus preview-shell `postMessage` warnings.
+- That means the blank white screen is most likely an embedded-preview/editor issue, not a broken page component.
+- One deploy detail still needs alignment: `public/404.html` still uses `pathSegmentsToKeep = 0`, but this repo is deployed under `/colins-ink-studio/`, so it should preserve 1 path segment.
 
-The workflow and Vite config are already correct. The missing piece is a **404.html** file for SPA routing on GitHub Pages, and ensuring the build output works correctly.
+Implementation plan
+1. Add a root error fallback
+- Wrap the app mount with a simple error boundary so a real runtime failure shows a visible message instead of a blank white screen.
+- This makes future debugging much easier in both Lovable preview and GitHub Pages.
 
-### Changes
+2. Isolate the preview-only issue from the app
+- Keep the page components (`Navbar`, `Hero`, `About`, `Portfolio`, `Contact`, `Footer`) unchanged unless a real crash is reproduced.
+- If the embedded Lovable preview still goes white, adjust the development-only preview instrumentation in `vite.config.ts` rather than rewriting the site UI.
 
-**1. Add `public/404.html`** — SPA redirect fallback
-GitHub Pages serves this for any route that doesn't match a static file. It redirects all paths back to `index.html` so client-side routing works.
+3. Fix the remaining GitHub Pages routing mismatch
+- Update `public/404.html` so the SPA fallback keeps the repo subpath (`pathSegmentsToKeep = 1`).
+- Keep the current `vite.config.ts` base and `BrowserRouter basename` approach so assets and routing stay aligned.
 
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <script>
-      // Redirect all 404s to index.html for SPA routing
-      var pathSegmentsToKeep = 0;
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
-    </script>
-  </head>
-</html>
-```
+4. Verify in all three environments
+- Embedded Lovable preview
+- “Open preview in new tab”
+- `https://jennypettersson96.github.io/colins-ink-studio/`
 
-**2. Add SPA redirect handler to `index.html`** — inside `<head>`, add a script that picks up the redirect from 404.html and restores the correct URL via `replaceState`:
+Acceptance criteria
+- The app no longer appears as a blank white screen when a real error happens.
+- The Lovable preview and preview-in-new-tab both show the homepage content.
+- The GitHub Pages URL loads correctly and repo-subpath routing fallback works.
 
-```html
-<script>
-  (function(l) {
-    if (l.search[1] === '/') {
-      var decoded = l.search.slice(1).split('&').map(function(s) {
-        return s.replace(/~and~/g, '&')
-      }).join('?');
-      window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
-    }
-  }(window.location))
-</script>
-```
-
-**3. Add `.nojekyll` file to `public/`** — empty file that tells GitHub Pages not to process the site through Jekyll (which ignores files starting with `_`, like `_assets`).
-
-These three additions complete the GitHub Pages SPA structure. The existing workflow and Vite config need no changes.
-
+Technical details
+- Files likely involved: `src/main.tsx`, possibly `src/App.tsx`, `vite.config.ts`, `public/404.html`
+- No content rewrite is needed for the tattoo site sections.
+- The current console warnings are non-fatal and appear tied to development tooling rather than the actual page render.
