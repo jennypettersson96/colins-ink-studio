@@ -53,7 +53,11 @@ const Portfolio = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {POSTS.map((url) => (
-            <div key={url} className="flex justify-center">
+            <div
+              key={url}
+              className="flex justify-center h-[500px] overflow-y-auto overflow-x-hidden rounded border border-border"
+              style={{ scrollbarWidth: "thin" }}
+            >
               <InstagramEmbed url={url} />
             </div>
           ))}
