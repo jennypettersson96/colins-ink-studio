@@ -2,7 +2,7 @@ const Hero = () => (
   <section className="min-h-screen flex items-center justify-center relative px-4">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(0_0%_10%)_0%,_hsl(0_0%_5%)_70%)]" />
     <div className="relative text-center max-w-3xl mx-auto">
-      <p className="text-sm tracking-[0.4em] uppercase text-muted-foreground mb-4">Tattoo Studio · Uddevalla</p>
+      <p className="text-sm tracking-[0.4em] uppercase text-muted-foreground mb-4">Tatuerare på Studio 451 · Uddevalla</p>
       <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6" style={{ fontFamily: 'var(--font-heading)' }}>
         Colins Ink
       </h1>
