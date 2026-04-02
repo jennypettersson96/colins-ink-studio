@@ -1,32 +1,28 @@
 
 
-## Plan: Bädda in Instagram-inlägg i Portfolio-sektionen
+## Plan: Clarify that Colins Ink is a tattooer at Studio 451 (not a studio itself)
 
-### Vad som görs
-Ersätter den nuvarande portfolio-sektionen med inbäddade Instagram-inlägg via Instagrams officiella embed-script.
+The current content describes Colins Ink as a "tatueringsstudio" (tattoo studio). The correct framing is that Colins Ink is a **tattoo artist/tatuerare** who works **at** Studio 451. Here are the changes needed:
 
-### Inlägg att bädda in (5 unika)
-1. `https://www.instagram.com/p/DWCLiiODJgx/`
-2. `https://www.instagram.com/p/DVY3BFmjH5O/`
-3. `https://www.instagram.com/p/DVwEUrODIMQ/`
-4. `https://www.instagram.com/p/DV9PyYwDCqu/`
-5. `https://www.instagram.com/p/DUyVfpDDIkg/`
+### Files to update
 
-### Tekniska ändringar
+**1. `src/components/Hero.tsx`**
+- Change subtitle from "Tattoo Studio · Uddevalla" to "Tatuerare på Studio 451 · Uddevalla"
 
-**1. `index.html`** — Lägg till Instagrams embed-script i `<body>`:
-```html
-<script async src="//www.instagram.com/embed.js"></script>
-```
+**2. `src/components/About.tsx`**
+- Rewrite intro: "Colins Ink är en tatuerare baserad på Studio 451 i Uddevalla" (not "en tatueringsstudio")
+- Change "Vår studio erbjuder..." to reference Studio 451 properly (e.g. "På Studio 451 erbjuds en avslappnad och professionell miljö...")
+- Adjust "vi" (we) language to reflect a single artist if appropriate, or keep plural if it's a brand
 
-**2. `src/components/Portfolio.tsx`** — Uppdatera komponenten:
-- Skapa en `InstagramEmbed`-komponent som renderar en `blockquote` med klass `instagram-media` och korrekt `data-instgrm-permalink`
-- Använd `useEffect` för att anropa `window.instgrm.Embeds.process()` efter render så att embeds aktiveras
-- Visa inläggen i en responsiv grid (1 kolumn mobil, 2-3 kolumner desktop)
-- Behåll "Vad vi erbjuder"-listan och Instagram-länkknappen
+**3. `index.html`**
+- Title: "Colins Ink – Tatuerare på Studio 451, Uddevalla"
+- Meta description: "Colins Ink är en tatuerare på Studio 451 i Uddevalla..."
+- OG title: "Colins Ink – Tatuerare på Studio 451"
+- OG description: update similarly
 
-### Layout
-- Responsiv grid med `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` gap
-- Varje embed centrerad med max-width 540px (Instagrams standard)
-- Befintlig stilistik (svart/vit, typsnitt) bevaras
+**4. `src/components/Contact.tsx`**
+- No structural changes needed, contact info already correct
+
+**5. `src/components/Footer.tsx`**
+- Already says "Studio 451 · Göteborgsvägen 21" — this is fine
 
